@@ -1,0 +1,10 @@
+Font: Swansea.ttf
+Author: Roger White
+License: Public Domain
+
+License Information:
+"Roger White is a quite prolific author of fonts for use on computers. There are 114 fonts on this site, each of which has been produced from hand drawn original artwork which has been scanned and the resultant image cleaned up before being compiled into a font. Hinting and Kerning pairs have been added in order to deliver high quality fonts to the end user. A number of the fonts have been used for commercial purposes. One has been used in the titles of a children’s television program, one was used in a document issued by the European Commission, one was used in a computer game, and several have been used in published books.
+
+Despite what is said in the readme files associated with the fonts all fonts on this site are now public domain, whether used for personal use or for commercial purposes. All that I ask is that the source is acknowledged if you are using any for commercial purposes. All fonts are available in both Truetype and Postscript Type 1 versions.
+
+The following pages contain samples of what the font looks like and there is the opportunity to download the font itself"
