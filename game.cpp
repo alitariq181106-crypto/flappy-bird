@@ -12,27 +12,29 @@ using namespace std;
 // allow the ball to move uo when press sapce button
 
 struct Bird {
-    Vec2 pos,size;
-    Vec2 vel;
+    Vec2 pos,size,vel;
     float radius;
     Texture texture;
 };
-
 struct Pipe {
-    Vec2 pos;
+    Vec2 pos,vel;
     Vec2 size;
     bool passed;
 };
 
 Bird bird;
+Pipe pipe1_top;
+Pipe pipe1;
+Pipe pipe2;
+Pipe pipe2_top;
 vector<Pipe> pipes;
 
 float gravity;
 float jumpForce;
 float pipeSpeed;
 int score;
-
-
+// provides a random number between the two numbers provided
+int random(int num1, int num2){}
 void init() {
     pipes.clear();
 
@@ -46,18 +48,42 @@ void init() {
     pipeSpeed = 200.0f;
     score = 0;
 
+    pipe1.pos = Vec2 (WINDOW_WIDTH/3,0);
+    pipe1.vel = Vec2(0,0);
+    pipe1_top.pos = Vec2(WINDOW_WIDTH/3,WINDOW_HEIGHT);
+    pipe2.pos = Vec2 (WINDOW_WIDTH*2/5,0);
+    pipe2_top.pos = Vec2(WINDOW_WIDTH*2/5,WINDOW_WIDTH);
+    pipe1.size= Vec2 (50,100);
+    pipe2.size= Vec2 (50,500);
+    pipe2_top.size= Vec2 (50,800);
+    pipe1_top.size= Vec2 (50,600);
+
+
 
 }
 
 // Update Game
 void update(float dt) {
     //if (isKeyPressed(KEY_SPACE)) {
-        bird.vel.y = jumpForce;
+        //bird.vel.y = jumpForce;
     //}
+    Vec2 forward = Vec2(0,-1);
+    pipe1.vel = Vec2(forward*pipeSpeed);
+    pipe1_top.pos += pipe1.vel *dt;
+    pipe2.pos +=pipe1.vel *dt;
+    pipe2_top.pos += pipe1.vel *dt;
+    pipe1.pos += pipe1.vel *dt;
 
     //bird.vel.y = bird.vel.y + gravity * dt;
     //bird.pos.y = bird.pos.y + bird.vel.y * dt;
-
+    if ((pipe1.pos.x ==0)&&(pipe1_top.pos.x ==0)){
+        pipe1.size = Vec2(50,random(0,WINDOW_HEIGHT));
+        pipe1_top.size = Vec2(50,random(pipe1.size.y+50,WINDOW_HEIGHT));// this fifty can alo be a random number that will be the distance between two pillars
+    }
+    if ((pipe2.pos.x ==0)&&(pipe2_top.pos.x ==0)){
+        pipe2.size = Vec2(50,random(0,WINDOW_HEIGHT));
+        pipe2_top.size = Vec2(50,random(pipe2.size.y+50,WINDOW_HEIGHT));// this fifty can alo be a random number that will be the distance between two pillars
+    }
 }
 
 // Render Game
@@ -66,6 +92,10 @@ void render(float lag) {
     clear(0, 0, 0);
 
     drawCircle(bird.pos,bird.radius,Color::red);
+    drawRect(pipe1.pos,pipe1.size,Color::green,0);
+    drawRect(pipe1_top.pos,pipe1_top.size,Color::green,0);
+    drawRect(pipe2.pos,pipe2.size,Color::green,0);
+    drawRect(pipe2_top.pos,pipe2_top.size,Color::green,0);
 
 }
 
