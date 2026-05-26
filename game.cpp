@@ -54,6 +54,9 @@ void resetPipe(Pipe &top, Pipe &bottom, float x)
 
     top.vel = Vec2(0,0);
     bottom.vel = Vec2(0,0);
+
+    top.passed = false;
+    bottom.passed = false;
 }
 
 bool isCollision(Vec2 Pos1, Vec2 Size1, Vec2 Pos2, Vec2 Size2)
@@ -111,6 +114,15 @@ void update(float dt) {
         resetPipe(pipe2_top, pipe2_bottom, WINDOW_WIDTH + 300);
     }
 
+// check if the bird has passed the pipes and update the score    
+    if((pipe1_top.pos.x + pipe1_top.size.x < bird.pos.x) && !pipe1_top.passed){
+        score++;
+        pipe1_top.passed = true;
+    }
+    if((pipe2_top.pos.x + pipe2_top.size.x < bird.pos.x) && !pipe2_top.passed){
+        score++;
+        pipe2_top.passed = true;
+    }
 
     if(isCollision(bird.pos, bird.size, pipe1_top.pos, pipe1_top.size) ||
     isCollision(bird.pos, bird.size, pipe1_bottom.pos, pipe1_bottom.size) ||
@@ -134,6 +146,8 @@ void render(float lag) {
     drawRect(pipe1_top.pos,pipe1_top.size,Color::green,0);
     drawRect(pipe2_bottom.pos,pipe2_bottom.size,Color::green,0);
     drawRect(pipe2_top.pos,pipe2_top.size,Color::green,0);
+
+    drawText(20, 20, (char*)to_string(score).c_str(), 255, 255, 255, 255);
 
 
     if (gameOver) {
