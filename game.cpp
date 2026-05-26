@@ -118,6 +118,10 @@ void update(float dt) {
     isCollision(bird.pos, bird.size, pipe2_bottom.pos, pipe2_bottom.size))
     {gameOver = true;}   
 
+    if (bird.pos.y < 0 || bird.pos.y + bird.size.y > WINDOW_HEIGHT){
+        gameOver = true;
+    }
+
 
 }
 // Render Game
