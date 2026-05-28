@@ -71,7 +71,7 @@ void init() {
     bird.pos = Vec2(100, WINDOW_HEIGHT/2);
     bird.vel = Vec2(0, 0);
     bird.radius = 15;
-    bird.size = Vec2(10,10);
+    bird.size = Vec2(bird.radius * 2, bird.radius * 2);
 
     gravity = 400.0f;
     jumpForce = -250.0f;
@@ -124,15 +124,20 @@ void update(float dt) {
         pipe2_top.passed = true;
     }
 
-    if(isCollision(bird.pos, bird.size, pipe1_top.pos, pipe1_top.size) ||
-    isCollision(bird.pos, bird.size, pipe1_bottom.pos, pipe1_bottom.size) ||
-    isCollision(bird.pos, bird.size, pipe2_top.pos, pipe2_top.size) ||
-    isCollision(bird.pos, bird.size, pipe2_bottom.pos, pipe2_bottom.size))
-    {gameOver = true;}   
+    Vec2 birdHitboxPos = Vec2(
+    bird.pos.x - bird.radius,
+    bird.pos.y - bird.radius
+    );
 
-    if (bird.pos.y < 0 || bird.pos.y + bird.size.y > WINDOW_HEIGHT){
-        gameOver = true;
-    }
+    if(isCollision(birdHitboxPos, bird.size, pipe1_top.pos, pipe1_top.size) ||
+        isCollision(birdHitboxPos, bird.size, pipe1_bottom.pos, pipe1_bottom.size) ||
+        isCollision(birdHitboxPos, bird.size, pipe2_top.pos, pipe2_top.size) ||
+        isCollision(birdHitboxPos, bird.size, pipe2_bottom.pos, pipe2_bottom.size))
+        {gameOver = true;}  
+
+    if (bird.pos.y - bird.radius < 0 ||
+    bird.pos.y + bird.radius > WINDOW_HEIGHT){
+        gameOver = true;}
 
 
 }
