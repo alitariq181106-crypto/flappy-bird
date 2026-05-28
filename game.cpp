@@ -19,6 +19,7 @@ struct Bird {
 struct Pipe {
     Vec2 pos,vel;
     Vec2 size;
+    Texture texture;
 };
 
 struct PipePair {
@@ -35,6 +36,10 @@ float jumpForce;
 float pipeSpeed;
 int score;
 bool gameOver;
+
+Texture birdTexture;
+Texture pipeTopTexture;
+Texture pipeBottomTexture;
 // provides a random number between the two numbers provided
 int random(int min, int max){
     int num = (rand()%(max-min+1))+min;
@@ -55,6 +60,9 @@ void resetPipe(Pipe &top, Pipe &bottom, float x)
 
     top.vel = Vec2(0,0);
     bottom.vel = Vec2(0,0);
+
+    top.texture = pipeTopTexture;
+    bottom.texture = pipeBottomTexture;
 }
 
 
@@ -77,8 +85,11 @@ void init() {
     pipeSpeed = 200.0f;
     score = 0;
     gameOver = false;
-    pipes.push_back(PipePair());
-    pipes.push_back(PipePair());
+
+    // bird.texture = loadTexture("bird.png");
+    // pipeTopTexture = loadTexture("toppipe.png");
+    // pipeBottomTexture = loadTexture("bottompipe.png");
+
     for (int i = 0; i < 5; i++) {
         pipes.push_back(PipePair());
         resetPipe(pipes[i].top, pipes[i].bottom, WINDOW_WIDTH + i * 300);
@@ -157,11 +168,27 @@ void render(float lag) {
     // Clear Screen
     clear(0, 0, 0);
 
+
     drawCircle(bird.pos,bird.radius,Color::red);
-    for (const auto &pipePair : pipes) {
-        drawRect(pipePair.bottom.pos, pipePair.bottom.size, Color::green, 0);
-        drawRect(pipePair.top.pos, pipePair.top.size, Color::green, 0);
-    }
+ for (const auto &pipePair : pipes) { drawRect(pipePair.bottom.pos, pipePair.bottom.size, Color::green, 0); 
+    drawRect(pipePair.top.pos, pipePair.top.size, Color::green, 0); }
+
+    // drawTexture(
+    // bird.texture,
+    // bird.pos.x - bird.radius,
+    // bird.pos.y - bird.radius,
+    // bird.size.x,
+    // bird.size.y
+    // );
+
+
+//     for (const auto &pipePair : pipes) {
+
+//     drawTexture(pipePair.bottom.texture, pipePair.bottom.pos, pipePair.bottom.size);
+
+//     drawTexture(pipePair.top.texture, pipePair.top.pos, pipePair.top.size);
+// }
+    
 
     drawText(20, 20, (char*)to_string(score).c_str(), 255, 255, 255, 255);
 
