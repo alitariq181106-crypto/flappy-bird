@@ -19,15 +19,16 @@ struct Bird {
 struct Pipe {
     Vec2 pos,vel;
     Vec2 size;
+};
+
+struct PipePair {
+    Pipe top;
+    Pipe bottom;
     bool passed;
 };
 
 Bird bird;
-Pipe pipe1_top;
-Pipe pipe1_bottom;
-Pipe pipe2_top;
-Pipe pipe2_bottom;
-vector<Pipe> pipes;
+vector<PipePair> pipes;
 
 float gravity;
 float jumpForce;
@@ -54,10 +55,8 @@ void resetPipe(Pipe &top, Pipe &bottom, float x)
 
     top.vel = Vec2(0,0);
     bottom.vel = Vec2(0,0);
-
-    top.passed = false;
-    bottom.passed = false;
 }
+
 
 bool isCollision(Vec2 Pos1, Vec2 Size1, Vec2 Pos2, Vec2 Size2)
 {
@@ -78,8 +77,12 @@ void init() {
     pipeSpeed = 200.0f;
     score = 0;
     gameOver = false;
-    resetPipe(pipe1_top, pipe1_bottom, WINDOW_WIDTH);
-    resetPipe(pipe2_top, pipe2_bottom, WINDOW_WIDTH + 300);
+    pipes.push_back(PipePair());
+    pipes.push_back(PipePair());
+    for (int i = 0; i < 5; i++) {
+        pipes.push_back(PipePair());
+        resetPipe(pipes[i].top, pipes[i].bottom, WINDOW_WIDTH + i * 300);
+    }
 
 }
 
@@ -102,26 +105,33 @@ void update(float dt) {
 
     Vec2 forward = Vec2(-1,0);
 // move the pipes towards left
-    pipe1_top.pos = pipe1_top.pos + forward * pipeSpeed * dt;
-    pipe1_bottom.pos = pipe1_bottom.pos + forward * pipeSpeed * dt;
-    pipe2_top.pos = pipe2_top.pos + forward * pipeSpeed * dt;
-    pipe2_bottom.pos = pipe2_bottom.pos + forward * pipeSpeed * dt;
+    for (auto &pipePair : pipes) {
+        pipePair.top.pos = pipePair.top.pos + forward * pipeSpeed * dt;
+        pipePair.bottom.pos = pipePair.bottom.pos + forward * pipeSpeed * dt;
+    }
 // reset the pipes when they go off screen
-    if((pipe1_bottom.pos.x <=0)&&(pipe1_top.pos.x <=0)){
-        resetPipe(pipe1_top, pipe1_bottom, WINDOW_WIDTH);
+    for (auto &pipePair : pipes) {
+    if (pipePair.top.pos.x + pipePair.top.size.x <= 0)
+    {
+        float maxX = 0;
+// find the maximum x position of the pipes to place the new pipe after the last one
+        for (auto &p : pipes) {
+            if (p.top.pos.x > maxX) {
+                maxX = p.top.pos.x;
+            }
+        }
+
+        resetPipe(pipePair.top, pipePair.bottom, maxX + 300);
+        pipePair.passed = false;
     }
-    if((pipe2_bottom.pos.x <=0)&&(pipe2_top.pos.x <=0)){
-        resetPipe(pipe2_top, pipe2_bottom, WINDOW_WIDTH + 300);
-    }
+}
 
 // check if the bird has passed the pipes and update the score    
-    if((pipe1_top.pos.x + pipe1_top.size.x < bird.pos.x) && !pipe1_top.passed){
-        score++;
-        pipe1_top.passed = true;
-    }
-    if((pipe2_top.pos.x + pipe2_top.size.x < bird.pos.x) && !pipe2_top.passed){
-        score++;
-        pipe2_top.passed = true;
+    for (auto &pipePair : pipes) {
+        if((pipePair.top.pos.x + pipePair.top.size.x < bird.pos.x) && !pipePair.passed){
+            score++;
+            pipePair.passed = true;
+        }
     }
 
     Vec2 birdHitboxPos = Vec2(
@@ -129,11 +139,12 @@ void update(float dt) {
     bird.pos.y - bird.radius
     );
 
-    if(isCollision(birdHitboxPos, bird.size, pipe1_top.pos, pipe1_top.size) ||
-        isCollision(birdHitboxPos, bird.size, pipe1_bottom.pos, pipe1_bottom.size) ||
-        isCollision(birdHitboxPos, bird.size, pipe2_top.pos, pipe2_top.size) ||
-        isCollision(birdHitboxPos, bird.size, pipe2_bottom.pos, pipe2_bottom.size))
+    for (auto &pipePair : pipes) {
+    if(isCollision(birdHitboxPos, bird.size, pipePair.top.pos, pipePair.top.size) ||
+        isCollision(birdHitboxPos, bird.size, pipePair.bottom.pos, pipePair.bottom.size))
         {gameOver = true;}  
+
+    }
 
     if (bird.pos.y - bird.radius < 0 ||
     bird.pos.y + bird.radius > WINDOW_HEIGHT){
@@ -147,10 +158,10 @@ void render(float lag) {
     clear(0, 0, 0);
 
     drawCircle(bird.pos,bird.radius,Color::red);
-    drawRect(pipe1_bottom.pos,pipe1_bottom.size,Color::green,0);
-    drawRect(pipe1_top.pos,pipe1_top.size,Color::green,0);
-    drawRect(pipe2_bottom.pos,pipe2_bottom.size,Color::green,0);
-    drawRect(pipe2_top.pos,pipe2_top.size,Color::green,0);
+    for (const auto &pipePair : pipes) {
+        drawRect(pipePair.bottom.pos, pipePair.bottom.size, Color::green, 0);
+        drawRect(pipePair.top.pos, pipePair.top.size, Color::green, 0);
+    }
 
     drawText(20, 20, (char*)to_string(score).c_str(), 255, 255, 255, 255);
 
