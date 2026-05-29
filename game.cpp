@@ -28,8 +28,16 @@ struct PipePair {
     bool passed;
 };
 
+struct Heart {
+    Vec2 pos;
+    Vec2 size;
+    bool active;
+    Texture texture;
+};
+
 Bird bird;
 vector<PipePair> pipes;
+Heart heart;
 
 int lives;
 float gravity;
@@ -81,6 +89,10 @@ void init() {
     bird.radius = 15;
     bird.size = Vec2(bird.radius * 2, bird.radius * 2);
 
+    heart.pos = Vec2(600, 200);
+    heart.size = Vec2(30, 30);
+    heart.active = true;
+
     gravity = 400.0f;
     jumpForce = -250.0f;
     pipeSpeed = 200.0f;
@@ -114,6 +126,8 @@ void update(float dt) {
 // apply gravity to the bird and move it down
     bird.vel.y = bird.vel.y + gravity * dt;
     bird.pos.y = bird.pos.y + bird.vel.y * dt;
+// move the heart towards left
+    heart.pos = heart.pos + Vec2(-pipeSpeed * dt, 0);
 
     Vec2 forward = Vec2(-1,0);
 // move the pipes towards left
@@ -174,6 +188,31 @@ void update(float dt) {
             bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
             bird.vel = Vec2(0,0);
             }}
+// check if the bird collides with the heart and update lives
+    if (heart.active && isCollision(birdHitboxPos, bird.size, heart.pos, heart.size)) {
+        lives++;
+        heart.active = false;
+    }
+
+    if(heart.pos.x + heart.size.x < 0){
+        heart.active = true;
+        bool isValidPosition = false;
+// make sure the heart does not spawn on the pipes
+        while (!isValidPosition) {
+            isValidPosition = true;
+            heart.pos = Vec2(WINDOW_WIDTH + random(200, 600), random(100, WINDOW_HEIGHT - (int)heart.size.y - 100));
+// check for collision with pipes
+            Vec2 testHeartPos = Vec2(heart.pos.x - 5, heart.pos.y - 5);
+            Vec2 testHeartSize = Vec2(heart.size.x + 10, heart.size.y + 10);
+            for (const auto &pipePair : pipes) {
+                if (isCollision(testHeartPos, testHeartSize, pipePair.top.pos, pipePair.top.size) ||
+                    isCollision(testHeartPos, testHeartSize, pipePair.bottom.pos, pipePair.bottom.size)) {
+                    isValidPosition = false;
+                    break;
+                }
+            }
+        }
+    }
 
 
 }
@@ -203,6 +242,9 @@ void render(float lag) {
 //     drawTexture(pipePair.top.texture, pipePair.top.pos, pipePair.top.size);
 // }
     
+    if (heart.active) {
+        drawRect(heart.pos, heart.size, Color::red, 0);
+    }
 
     drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
     drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
