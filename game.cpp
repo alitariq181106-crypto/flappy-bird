@@ -81,6 +81,33 @@ bool isCollision(Vec2 Pos1, Vec2 Size1, Vec2 Pos2, Vec2 Size2)
             Pos1.y < Pos2.y + Size2.y && Pos1.y + Size1.y > Pos2.y);
 }
 
+void respawnBirdSafe(Bird &bird, const vector<PipePair> &pipes)
+{
+    bool safe = false;
+
+    while (!safe) {
+        safe = true;
+
+        bird.pos = Vec2(100, random(100, WINDOW_HEIGHT - 100));
+        bird.vel = Vec2(0, 0);
+
+        Vec2 hitbox = Vec2(
+            bird.pos.x - bird.radius,
+            bird.pos.y - bird.radius
+        );
+
+        for (const auto &pipePair : pipes) {
+            if (isCollision(hitbox, bird.size,
+                            pipePair.top.pos, pipePair.top.size) ||
+                isCollision(hitbox, bird.size,
+                            pipePair.bottom.pos, pipePair.bottom.size)) {
+                safe = false;
+                break;
+            }
+        }
+    }
+}
+
 void init() {
     pipes.clear();
 
@@ -174,10 +201,7 @@ void update(float dt) {
         {lives--;
             if (lives <= 0) {
                 gameOver = true;
-                }else {
-                bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
-                bird.vel = Vec2(0,0);
-                }
+                }else {respawnBirdSafe(bird, pipes);}
         }  
 
     }
@@ -187,10 +211,8 @@ void update(float dt) {
         lives--;
         if (lives <= 0) {
             gameOver = true;
-        }else {
-            bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
-            bird.vel = Vec2(0,0);
-            }}
+        }else {respawnBirdSafe(bird, pipes);}
+}
 // check if the bird collides with the heart and update lives
     if (heart.active && isCollision(birdHitboxPos, bird.size, heart.pos, heart.size)) {
         lives++;

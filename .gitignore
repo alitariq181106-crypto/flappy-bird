@@ -1,0 +1,11 @@
+*.o
+*.obj
+
+game
+build/
+Engine/build/
+Engine/SDL3_gfx/build/
+
+.DS_Store
+
+*.log
