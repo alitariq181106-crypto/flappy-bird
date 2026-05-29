@@ -19,91 +19,202 @@ struct Bird {
 struct Pipe {
     Vec2 pos,vel;
     Vec2 size;
+    Texture texture;
+};
+
+struct PipePair {
+    Pipe top;
+    Pipe bottom;
     bool passed;
 };
 
 Bird bird;
-Pipe pipe1_top;
-Pipe pipe1;
-Pipe pipe2;
-Pipe pipe2_top;
-vector<Pipe> pipes;
+vector<PipePair> pipes;
 
+int lives;
 float gravity;
 float jumpForce;
 float pipeSpeed;
 int score;
+bool gameOver;
+
+Texture birdTexture;
+Texture pipeTopTexture;
+Texture pipeBottomTexture;
 // provides a random number between the two numbers provided
-int random(int num1, int num2){
-    int num = (rand()%num2)+num1;
+int random(int min, int max){
+    int num = (rand()%(max-min+1))+min;
     return num;
 }
+
+// Resets the position and size of the pipes
+void resetPipe(Pipe &top, Pipe &bottom, float x)
+{
+    int gap = 180;
+    int topHeight = random(50, WINDOW_HEIGHT - gap - 50);
+    
+    top.pos = Vec2(x, 0);
+    top.size = Vec2(50, topHeight);
+
+    bottom.pos = Vec2(x, topHeight + gap);
+    bottom.size = Vec2(50, WINDOW_HEIGHT - topHeight - gap);
+
+    top.vel = Vec2(0,0);
+    bottom.vel = Vec2(0,0);
+
+    top.texture = pipeTopTexture;
+    bottom.texture = pipeBottomTexture;
+}
+
+
+bool isCollision(Vec2 Pos1, Vec2 Size1, Vec2 Pos2, Vec2 Size2)
+{
+    return (Pos1.x < Pos2.x + Size2.x && Pos1.x + Size1.x > Pos2.x &&
+            Pos1.y < Pos2.y + Size2.y && Pos1.y + Size1.y > Pos2.y);
+}
+
 void init() {
     pipes.clear();
 
     bird.pos = Vec2(100, WINDOW_HEIGHT/2);
     bird.vel = Vec2(0, 0);
     bird.radius = 15;
-    bird.size = Vec2(10,10);
+    bird.size = Vec2(bird.radius * 2, bird.radius * 2);
 
     gravity = 400.0f;
     jumpForce = -250.0f;
     pipeSpeed = 200.0f;
     score = 0;
+    gameOver = false;
+    lives = 3;
+    // bird.texture = loadTexture("bird.png");
+    // pipeTopTexture = loadTexture("toppipe.png");
+    // pipeBottomTexture = loadTexture("bottompipe.png");
 
-    pipe1.pos = Vec2 (WINDOW_WIDTH/1.3,0);
-    pipe1.vel = Vec2(0,0);
-    pipe1_top.pos = Vec2(WINDOW_WIDTH/1.3,WINDOW_HEIGHT);
-    pipe2.pos = Vec2 (WINDOW_WIDTH/0.35,0);
-    pipe2_top.pos = Vec2(WINDOW_WIDTH/0.35,WINDOW_HEIGHT);
-    pipe1.size= Vec2 (50,100);
-    pipe2.size= Vec2 (50,500);
-    pipe2_top.size= Vec2 (50,800);
-    pipe1_top.size= Vec2 (50,600);
-
-
+    for (int i = 0; i < 5; i++) {
+        pipes.push_back(PipePair());
+        resetPipe(pipes[i].top, pipes[i].bottom, WINDOW_WIDTH + i * 300);
+    }
 
 }
 
 // Update Game
 void update(float dt) {
-    //if (isKeyPressed(KEY_SPACE)) {
-        //bird.vel.y = jumpForce;
-    //}
-    Vec2 forward = Vec2(-1,0);
-    pipe1.vel = Vec2(forward*pipeSpeed);
-    pipe1_top.pos += pipe1.vel *dt;
-    pipe2.pos +=pipe1.vel *dt;
-    pipe2_top.pos += pipe1.vel *dt;
-    pipe1.pos += pipe1.vel *dt;
-
-    //bird.vel.y = bird.vel.y + gravity * dt;
-    //bird.pos.y = bird.pos.y + bird.vel.y * dt;
-    if ((pipe1.pos.x <=0)&&(pipe1_top.pos.x <=0)){
-        pipe1.size = Vec2(50,random(0,WINDOW_HEIGHT));
-        pipe1_top.size = Vec2(50,random(pipe1.size.y+50,WINDOW_HEIGHT));// this fifty can alo be a random number that will be the distance between two pillars
-        pipe1_top.pos = Vec2(WINDOW_WIDTH,WINDOW_HEIGHT);
-        pipe1.pos = Vec2 (WINDOW_WIDTH,0);
+    if (gameOver) {
+        if (keyIsPressed(KEY_R)) {
+            init();
+        }
+        return;
     }
-    if ((pipe2.pos.x <=0)&&(pipe2_top.pos.x <=0)){
-        pipe2.size = Vec2(50,random(0,WINDOW_HEIGHT));
-        pipe2_top.size = Vec2(50,random(pipe2.size.y+50,WINDOW_HEIGHT));// this fifty can alo be a random number that will be the distance between two pillars
-        pipe1_top.pos = Vec2(WINDOW_WIDTH,WINDOW_HEIGHT);
-        pipe2.pos = Vec2 (WINDOW_WIDTH,0);
+
+
+    if (keyIsPressed(KEY_SPACE)) {
+        bird.vel.y = jumpForce;
+    }
+// apply gravity to the bird and move it down
+    bird.vel.y = bird.vel.y + gravity * dt;
+    bird.pos.y = bird.pos.y + bird.vel.y * dt;
+
+    Vec2 forward = Vec2(-1,0);
+// move the pipes towards left
+    for (auto &pipePair : pipes) {
+        pipePair.top.pos = pipePair.top.pos + forward * pipeSpeed * dt;
+        pipePair.bottom.pos = pipePair.bottom.pos + forward * pipeSpeed * dt;
+    }
+// reset the pipes when they go off screen
+    for (auto &pipePair : pipes) {
+    if (pipePair.top.pos.x + pipePair.top.size.x <= 0)
+    {
+        float maxX = 0;
+// find the maximum x position of the pipes to place the new pipe after the last one
+        for (auto &p : pipes) {
+            if (p.top.pos.x > maxX) {
+                maxX = p.top.pos.x;
+            }
+        }
+
+        resetPipe(pipePair.top, pipePair.bottom, maxX + 300);
+        pipePair.passed = false;
     }
 }
 
+// check if the bird has passed the pipes and update the score    
+    for (auto &pipePair : pipes) {
+        if((pipePair.top.pos.x + pipePair.top.size.x < bird.pos.x) && !pipePair.passed){
+            score++;
+            pipePair.passed = true;
+        }
+    }
+
+    Vec2 birdHitboxPos = Vec2(
+    bird.pos.x - bird.radius,
+    bird.pos.y - bird.radius
+    );
+
+    for (auto &pipePair : pipes) {
+    if(isCollision(birdHitboxPos, bird.size, pipePair.top.pos, pipePair.top.size) ||
+        isCollision(birdHitboxPos, bird.size, pipePair.bottom.pos, pipePair.bottom.size))
+        {lives--;
+            if (lives <= 0) {
+                gameOver = true;
+                }else {
+                bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
+                bird.vel = Vec2(0,0);
+                }
+        }  
+
+    }
+
+    if (bird.pos.y - bird.radius < 0 ||
+    bird.pos.y + bird.radius > WINDOW_HEIGHT){
+        lives--;
+        if (lives <= 0) {
+            gameOver = true;
+        }else {
+            bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
+            bird.vel = Vec2(0,0);
+            }}
+
+
+}
 // Render Game
 void render(float lag) {
     // Clear Screen
     clear(0, 0, 0);
 
-    drawCircle(bird.pos,bird.radius,Color::red);
-    drawRect(pipe1.pos,pipe1.size,Color::green,0);
-    drawRect(pipe1_top.pos,pipe1_top.size,Color::green,0);
-    drawRect(pipe2.pos,pipe2.size,Color::green,0);
-    drawRect(pipe2_top.pos,pipe2_top.size,Color::green,0);
 
+    drawCircle(bird.pos,bird.radius,Color::red);
+ for (const auto &pipePair : pipes) { drawRect(pipePair.bottom.pos, pipePair.bottom.size, Color::green, 0); 
+    drawRect(pipePair.top.pos, pipePair.top.size, Color::green, 0); }
+
+    // drawTexture(
+    // bird.texture,
+    // bird.pos.x - bird.radius,
+    // bird.pos.y - bird.radius,
+    // bird.size.x,
+    // bird.size.y
+    // );
+
+
+//     for (const auto &pipePair : pipes) {
+
+//     drawTexture(pipePair.bottom.texture, pipePair.bottom.pos, pipePair.bottom.size);
+
+//     drawTexture(pipePair.top.texture, pipePair.top.pos, pipePair.top.size);
+// }
+    
+
+    drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
+    drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
+
+
+    if (gameOver) {
+        drawText(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 20,
+                 (char*)"GAME OVER", 255, 0, 0, 255);
+
+        drawText(WINDOW_WIDTH / 2 - 120, WINDOW_HEIGHT / 2 + 20,
+                 (char*)"Press R to Restart", 255, 255, 255, 255);
+    }
 }
 
 // Close the Game
