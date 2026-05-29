@@ -31,6 +31,7 @@ struct PipePair {
 Bird bird;
 vector<PipePair> pipes;
 
+int lives;
 float gravity;
 float jumpForce;
 float pipeSpeed;
@@ -85,7 +86,7 @@ void init() {
     pipeSpeed = 200.0f;
     score = 0;
     gameOver = false;
-
+    lives = 3;
     // bird.texture = loadTexture("bird.png");
     // pipeTopTexture = loadTexture("toppipe.png");
     // pipeBottomTexture = loadTexture("bottompipe.png");
@@ -153,13 +154,26 @@ void update(float dt) {
     for (auto &pipePair : pipes) {
     if(isCollision(birdHitboxPos, bird.size, pipePair.top.pos, pipePair.top.size) ||
         isCollision(birdHitboxPos, bird.size, pipePair.bottom.pos, pipePair.bottom.size))
-        {gameOver = true;}  
+        {lives--;
+            if (lives <= 0) {
+                gameOver = true;
+                }else {
+                bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
+                bird.vel = Vec2(0,0);
+                }
+        }  
 
     }
 
     if (bird.pos.y - bird.radius < 0 ||
     bird.pos.y + bird.radius > WINDOW_HEIGHT){
-        gameOver = true;}
+        lives--;
+        if (lives <= 0) {
+            gameOver = true;
+        }else {
+            bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
+            bird.vel = Vec2(0,0);
+            }}
 
 
 }
@@ -190,7 +204,8 @@ void render(float lag) {
 // }
     
 
-    drawText(20, 20, (char*)to_string(score).c_str(), 255, 255, 255, 255);
+    drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
+    drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
 
 
     if (gameOver) {
