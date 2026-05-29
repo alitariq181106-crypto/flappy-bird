@@ -99,9 +99,12 @@ void init() {
     score = 0;
     gameOver = false;
     lives = 3;
-    // bird.texture = loadTexture("bird.png");
-    // pipeTopTexture = loadTexture("toppipe.png");
-    // pipeBottomTexture = loadTexture("bottompipe.png");
+    bird.texture= loadTexture("./assets/images/bird.png", Vec2(10,10), Vec2(680,565));
+    pipeTopTexture = loadTexture("./assets/images/pipes.png", Vec2(350,0), Vec2(325,600));
+    pipeBottomTexture = loadTexture("./assets/images/pipes.png", Vec2(350,950), Vec2(325,1350));
+    
+    //pipeTopTexture = loadTexture("./assets/images/pipes.png", Vec2(325,470), Vec2(350,130));
+    //pipeBottomTexture = loadTexture("./assets/images/pipes.png", Vec2(325,950), Vec2(350,13));
 
     for (int i = 0; i < 5; i++) {
         pipes.push_back(PipePair());
@@ -221,26 +224,13 @@ void render(float lag) {
     // Clear Screen
     clear(0, 0, 0);
 
-
+    drawTexture(bird.texture,bird.pos-bird.size/2,bird.size);
     drawCircle(bird.pos,bird.radius,Color::red);
- for (const auto &pipePair : pipes) { drawRect(pipePair.bottom.pos, pipePair.bottom.size, Color::green, 0); 
+ for (const auto &pipePair : pipes) {drawTexture(pipeTopTexture,pipePair.top.pos,pipePair.top.size);
+    drawTexture(pipeBottomTexture,pipePair.bottom.pos,pipePair.bottom.size);
+    drawRect(pipePair.bottom.pos, pipePair.bottom.size, Color::green, 0); 
     drawRect(pipePair.top.pos, pipePair.top.size, Color::green, 0); }
 
-    // drawTexture(
-    // bird.texture,
-    // bird.pos.x - bird.radius,
-    // bird.pos.y - bird.radius,
-    // bird.size.x,
-    // bird.size.y
-    // );
-
-
-//     for (const auto &pipePair : pipes) {
-
-//     drawTexture(pipePair.bottom.texture, pipePair.bottom.pos, pipePair.bottom.size);
-
-//     drawTexture(pipePair.top.texture, pipePair.top.pos, pipePair.top.size);
-// }
     
     if (heart.active) {
         drawRect(heart.pos, heart.size, Color::red, 0);
