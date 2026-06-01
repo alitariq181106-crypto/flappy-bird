@@ -60,6 +60,8 @@ Texture texture1;
 AudioClip background, jump, death;
 float start;
 static bool spacePressedLastFrame;
+float tutorialStart;
+bool showTutorial;
 // provides a random number between the two numbers provided
 int random(int min, int max){
     int num = (rand()%(max-min+1))+min;
@@ -137,6 +139,10 @@ void init() {
     score = 0;
     gameOver = false;
     lives = 3;
+
+    tutorialStart = getTimeInSeconds();
+    showTutorial = true;
+
     pipeTopTexture = loadTexture("./assets/images/pipes.png", Vec2(350,0), Vec2(325,600));
     pipeBottomTexture = loadTexture("./assets/images/pipes.png", Vec2(350,950), Vec2(325,1350));
     background2 = loadTexture("./assets/images/background.png", Vec2(0,0), Vec2(1020,1530));
@@ -166,6 +172,10 @@ void init() {
 // Update Game
 
 void update(float dt) {
+    if(showTutorial && getTimeInSeconds() - tutorialStart >2.0f){
+    showTutorial = false;
+    }
+
     if (gameOver) {
         if (keyIsPressed(KEY_R)) {
             init();
@@ -304,7 +314,11 @@ drawTexture(background2,
  for (const auto &pipePair : pipes) {drawTexture(pipeTopTexture,pipePair.top.pos,pipePair.top.size);
     drawTexture(pipeBottomTexture,pipePair.bottom.pos,pipePair.bottom.size);}
 
-    
+    if(showTutorial){
+    drawText(150, 200,
+        (char*)"Press SPACE to jump",
+        255, 255, 255, 255);
+    }
     drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
     drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
 
