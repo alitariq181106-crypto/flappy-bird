@@ -58,7 +58,8 @@ Texture restart;
 Texture heart1;
 Texture texture1;
 AudioClip background, jump, death;
-float start ;
+float start;
+static bool spacePressedLastFrame;
 // provides a random number between the two numbers provided
 int random(int min, int max){
     int num = (rand()%(max-min+1))+min;
@@ -66,9 +67,8 @@ int random(int min, int max){
 }
 
 // Resets the position and size of the pipes
-void resetPipe(Pipe &top, Pipe &bottom, float x)
+void resetPipe(Pipe &top, Pipe &bottom, float x, int gap)
 {
-    int gap = 180;
     int topHeight = random(50, WINDOW_HEIGHT - gap - 50);
     
     top.pos = Vec2(x, 0);
@@ -91,6 +91,34 @@ bool isCollision(Vec2 Pos1, Vec2 Size1, Vec2 Pos2, Vec2 Size2)
             Pos1.y < Pos2.y + Size2.y && Pos1.y + Size1.y > Pos2.y);
 }
 
+
+void respawnBirdSafe(Bird &bird, const vector<PipePair> &pipes)
+{
+    bool safe = false;
+
+    while (!safe) {
+        safe = true;
+
+        bird.pos = Vec2(100, random(100, WINDOW_HEIGHT - 100));
+        bird.vel = Vec2(0, 0);
+
+        Vec2 hitbox = Vec2(
+            bird.pos.x - bird.radius,
+            bird.pos.y - bird.radius
+        );
+
+        for (const auto &pipePair : pipes) {
+            if (isCollision(hitbox, bird.size,
+                            pipePair.top.pos, pipePair.top.size) ||
+                isCollision(hitbox, bird.size,
+                            pipePair.bottom.pos, pipePair.bottom.size)) {
+                safe = false;
+                break;
+            }
+        }
+    }
+}
+
 void init() {
     pipes.clear();
 
@@ -104,7 +132,7 @@ void init() {
     heart.active = true;
 
     gravity = 400.0f;
-    jumpForce = -250.0f;
+    jumpForce = -290.0f;
     pipeSpeed = 200.0f;
     score = 0;
     gameOver = false;
@@ -117,21 +145,21 @@ void init() {
     texture1= loadTexture("./assets/images/bird1.png");
     for (float iy =0;iy<2;iy++){
         for (float ix = 0;ix <4;ix++){
-            bird1 = subTexture(texture1,Rect{ix *512,iy*417.5,512,417.5});
+            bird1 = subTexture(texture1,Rect{ix *512,iy*417.5f,512,417.5f});
             bird.frames.push_back(bird1);
         }
     }
     bird.no_frames =bird.frames.size();
     bird.deuration = 0.8f;
     start = getTimeInSeconds();
-    
+    spacePressedLastFrame = false;
     background = loadAudioClip("./assets/audio/background.mp3");
     jump = loadAudioClip("./assets/audio/pop.mp3");
     death = loadAudioClip ("./assets/audio/game-over.mp3");
     playAudio(background,1.0f,true);
     for (int i = 0; i < 5; i++) {
         pipes.push_back(PipePair());
-        resetPipe(pipes[i].top, pipes[i].bottom, WINDOW_WIDTH + i * 300);
+        resetPipe(pipes[i].top, pipes[i].bottom, WINDOW_WIDTH + i * 300, 180);
     }
 }
 
@@ -145,14 +173,21 @@ void update(float dt) {
         return;
     }
 backgroundX -= 100 * dt;
+// increase pipe speed every 5 points
+
+    pipeSpeed = 200 + (score /5) * 7;
+
+int gap = std::max(150, 180 - score * 2);
 
 if (backgroundX <= -WINDOW_WIDTH){
     backgroundX = 0;}
 
-    if (keyIsPressed(KEY_SPACE)) {
+    if (keyIsPressed(KEY_SPACE) && !spacePressedLastFrame) {
         bird.vel.y = jumpForce;
         playAudio(jump,1.0f);
     }
+
+    spacePressedLastFrame = keyIsPressed(KEY_SPACE);
 // apply gravity to the bird and move it down
     bird.vel.y = bird.vel.y + gravity * dt;
     bird.pos.y = bird.pos.y + bird.vel.y * dt;
@@ -177,7 +212,7 @@ if (backgroundX <= -WINDOW_WIDTH){
             }
         }
 
-        resetPipe(pipePair.top, pipePair.bottom, maxX + 300);
+        resetPipe(pipePair.top, pipePair.bottom, maxX + 300, gap);
         pipePair.passed = false;
     }
 }
@@ -204,8 +239,7 @@ if (backgroundX <= -WINDOW_WIDTH){
                 playAudio(death,1.0f);
                 gameOver = true;
                 }else {
-                bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
-                bird.vel = Vec2(0,0);
+                respawnBirdSafe(bird, pipes);
                 }
         }  
 
@@ -217,8 +251,7 @@ if (backgroundX <= -WINDOW_WIDTH){
         if (lives <= 0) {
             gameOver = true;
         }else {
-            bird.pos = Vec2(100, WINDOW_HEIGHT / 2);
-            bird.vel = Vec2(0,0);
+            respawnBirdSafe(bird, pipes);
             }}
 // check if the bird collides with the heart and update lives
     if (heart.active && isCollision(birdHitboxPos, bird.size, heart.pos, heart.size)) {
@@ -257,9 +290,14 @@ drawTexture(background2,
             Vec2(backgroundX + WINDOW_WIDTH,0),
             Vec2(WINDOW_WIDTH,WINDOW_HEIGHT));
 
+    if (heart.active) {
+        drawTexture(heart1,heart.pos,heart.size);
+        //drawRect(heart.pos, heart.size, Color::red, 0);
+    }
+
     float current = getTimeInSeconds();
     float elapsed = current -start;
-    int frameindex = {(elapsed/bird.deuration)*bird.no_frames};
+    int frameindex =(int)((elapsed/bird.deuration)*bird.no_frames);
     frameindex %= bird.no_frames;
     drawTexture(bird.frames[frameindex],bird.pos-bird.size/2,bird.size);
     //drawCircle(bird.pos,bird.radius,Color::red);
@@ -267,11 +305,6 @@ drawTexture(background2,
     drawTexture(pipeBottomTexture,pipePair.bottom.pos,pipePair.bottom.size);}
 
     
-    if (heart.active) {
-        drawTexture(heart1,heart.pos,heart.size);
-        //drawRect(heart.pos, heart.size, Color::red, 0);
-    }
-
     drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
     drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
 
