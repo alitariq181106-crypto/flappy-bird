@@ -40,6 +40,7 @@ struct Heart {
 
 Bird bird;
 vector<PipePair> pipes;
+vector <Texture>frames1;
 Heart heart;
 
 int lives;
@@ -48,8 +49,10 @@ float jumpForce;
 float pipeSpeed;
 int score;
 bool gameOver;
+bool last1 = true;
+float some;
 
-Texture bird1;
+Texture bird1,over;
 Texture pipeTopTexture;
 Texture pipeBottomTexture;
 float backgroundX;
@@ -62,6 +65,7 @@ float start;
 static bool spacePressedLastFrame;
 float tutorialStart;
 bool showTutorial;
+bool animation;
 // provides a random number between the two numbers provided
 int random(int min, int max){
     int num = (rand()%(max-min+1))+min;
@@ -123,7 +127,7 @@ void respawnBirdSafe(Bird &bird, const vector<PipePair> &pipes)
 
 void init() {
     pipes.clear();
-
+    animation =true;
     bird.pos = Vec2(100, WINDOW_HEIGHT/2);
     bird.vel = Vec2(0, 0);
     bird.radius = 20;
@@ -149,10 +153,12 @@ void init() {
     restart = loadTexture("./assets/images/restart.png", Vec2(355,230), Vec2(950,400));
     heart1 = loadTexture("./assets/images/heart.png", Vec2(155,410), Vec2(710,600));
     texture1= loadTexture("./assets/images/bird1.png");
+    over= loadTexture("./assets/images/over.png");
     for (float iy =0;iy<2;iy++){
         for (float ix = 0;ix <4;ix++){
             bird1 = subTexture(texture1,Rect{ix *512,iy*417.5f,512,417.5f});
             bird.frames.push_back(bird1);
+            frames1.push_back(subTexture(over,ix *512,iy*417.5f,512,417.5f));
         }
     }
     bird.no_frames =bird.frames.size();
@@ -177,7 +183,12 @@ void update(float dt) {
     }
 
     if (gameOver) {
+        if (getTimeInSeconds() - some > bird.deuration){last1 = false;} 
         if (keyIsPressed(KEY_R)) {
+            bird.frames.clear();
+            animation = true;
+            last1 = true;
+            frames1.clear();
             init();
         }
         return;
@@ -245,9 +256,11 @@ if (backgroundX <= -WINDOW_WIDTH){
         isCollision(birdHitboxPos, bird.size, pipePair.bottom.pos, pipePair.bottom.size))
         {lives--;
             if (lives <= 0) {
+                some = getTimeInSeconds();
                 stopAudio(background);
                 playAudio(death,1.0f);
                 gameOver = true;
+                animation  = false;
                 }else {
                 respawnBirdSafe(bird, pipes);
                 }
@@ -299,18 +312,26 @@ drawTexture(background2, Vec2(backgroundX,0), Vec2(WINDOW_WIDTH,WINDOW_HEIGHT));
 drawTexture(background2,
             Vec2(backgroundX + WINDOW_WIDTH,0),
             Vec2(WINDOW_WIDTH,WINDOW_HEIGHT));
-
+if (last1){
+if (animation){
     if (heart.active) {
         drawTexture(heart1,heart.pos,heart.size);
         //drawRect(heart.pos, heart.size, Color::red, 0);
     }
-
     float current = getTimeInSeconds();
     float elapsed = current -start;
     int frameindex =(int)((elapsed/bird.deuration)*bird.no_frames);
     frameindex %= bird.no_frames;
-    drawTexture(bird.frames[frameindex],bird.pos-bird.size/2,bird.size);
-    //drawCircle(bird.pos,bird.radius,Color::red);
+    drawTexture(bird.frames[frameindex],bird.pos-bird.size/2,bird.size);}else{
+    float current = getTimeInSeconds();
+    float elapsed = current -start;
+    int frameinde =(int)((elapsed/bird.deuration)*8);
+    frameinde %= 8;
+    drawTexture(frames1[frameinde],bird.pos,bird.size*2);}}
+        if(last1 == false){
+    drawTexture(frames1[7],bird.pos,bird.size*2);}
+    
+
  for (const auto &pipePair : pipes) {drawTexture(pipeTopTexture,pipePair.top.pos,pipePair.top.size);
     drawTexture(pipeBottomTexture,pipePair.bottom.pos,pipePair.bottom.size);}
 
@@ -322,14 +343,6 @@ drawTexture(background2,
     drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
     drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
 
-
-    //if (gameOver) {
-      //  drawText(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 - 20,
-        //         (char*)"GAME OVER", 255, 0, 0, 255);
-
-        //drawText(WINDOW_WIDTH / 2 - 120, WINDOW_HEIGHT / 2 + 20,
-          //       (char*)"Press R to Restart", 255, 255, 255, 255);
-    //}
     if (gameOver){
     drawTexture(restart,Vec2(WINDOW_WIDTH/2 -125,WINDOW_HEIGHT/2 -125),Vec2(250,250));
 }
