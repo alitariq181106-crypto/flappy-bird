@@ -15,8 +15,6 @@ struct Bird {
     Vec2 pos,size,vel;
     float radius;
     Texture texture;
-    int no_frames;
-    float deuration;
     vector <Texture> frames;
 };
 struct Pipe {
@@ -42,30 +40,12 @@ Bird bird;
 vector<PipePair> pipes;
 vector <Texture>frames1;
 Heart heart;
-
-int lives;
-float gravity;
-float jumpForce;
-float pipeSpeed;
-int score;
-bool gameOver;
-bool last1 = true;
-float some;
-
-Texture bird1,over;
-Texture pipeTopTexture;
-Texture pipeBottomTexture;
-float backgroundX;
-Texture background2;
-Texture restart;
-Texture heart1;
-Texture texture1;
+int lives,score;
+float gravity,jumpForce,pipeSpeed,some,backgroundX,tutorialStart,start;
+bool gameOver,last1,showTutorial,animation;
+Texture bird1,over,pipeTopTexture,pipeBottomTexture,background2,restart,heart1,texture1;
 AudioClip background, jump, death;
-float start;
 static bool spacePressedLastFrame;
-float tutorialStart;
-bool showTutorial;
-bool animation;
 // provides a random number between the two numbers provided
 int random(int min, int max){
     int num = (rand()%(max-min+1))+min;
@@ -143,7 +123,7 @@ void init() {
     score = 0;
     gameOver = false;
     lives = 3;
-
+    last1 =true;
     tutorialStart = getTimeInSeconds();
     showTutorial = true;
 
@@ -161,8 +141,6 @@ void init() {
             frames1.push_back(subTexture(over,ix *512,iy*417.5f,512,417.5f));
         }
     }
-    bird.no_frames =bird.frames.size();
-    bird.deuration = 0.8f;
     start = getTimeInSeconds();
     spacePressedLastFrame = false;
     background = loadAudioClip("./assets/audio/background.mp3");
@@ -183,7 +161,7 @@ void update(float dt) {
     }
 
     if (gameOver) {
-        if (getTimeInSeconds() - some > bird.deuration){last1 = false;} 
+        if (getTimeInSeconds() - some > 0.8f){last1 = false;} 
         if (keyIsPressed(KEY_R)) {
             bird.frames.clear();
             animation = true;
@@ -315,17 +293,15 @@ drawTexture(background2,
 if (last1){
 if (animation){
     if (heart.active) {
-        drawTexture(heart1,heart.pos,heart.size);
-        //drawRect(heart.pos, heart.size, Color::red, 0);
-    }
+        drawTexture(heart1,heart.pos,heart.size);}
     float current = getTimeInSeconds();
     float elapsed = current -start;
-    int frameindex =(int)((elapsed/bird.deuration)*bird.no_frames);
-    frameindex %= bird.no_frames;
+    int frameindex =(int)((elapsed/0.8f)*8);
+    frameindex %= 8;
     drawTexture(bird.frames[frameindex],bird.pos-bird.size/2,bird.size);}else{
     float current = getTimeInSeconds();
     float elapsed = current -start;
-    int frameinde =(int)((elapsed/bird.deuration)*8);
+    int frameinde =(int)((elapsed/0.8f)*8);
     frameinde %= 8;
     drawTexture(frames1[frameinde],bird.pos,bird.size*2);}}
         if(last1 == false){
