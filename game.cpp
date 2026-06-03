@@ -286,10 +286,17 @@ if (backgroundX <= -WINDOW_WIDTH){
 void render(float lag) {
     // Clear Screen
     clear(0, 0, 0);
+// creating the background 
 drawTexture(background2, Vec2(backgroundX,0), Vec2(WINDOW_WIDTH,WINDOW_HEIGHT));
 drawTexture(background2,
             Vec2(backgroundX + WINDOW_WIDTH,0),
             Vec2(WINDOW_WIDTH,WINDOW_HEIGHT));
+
+// draw the pipes
+ for (const auto &pipePair : pipes) {drawTexture(pipeTopTexture,pipePair.top.pos,pipePair.top.size);
+    drawTexture(pipeBottomTexture,pipePair.bottom.pos,pipePair.bottom.size);}
+
+// drawing the bird by frame by frame
 if (last1){
 if (animation){
     if (heart.active) {
@@ -308,14 +315,12 @@ if (animation){
     drawTexture(frames1[7],bird.pos,bird.size*2);}
     
 
- for (const auto &pipePair : pipes) {drawTexture(pipeTopTexture,pipePair.top.pos,pipePair.top.size);
-    drawTexture(pipeBottomTexture,pipePair.bottom.pos,pipePair.bottom.size);}
-
     if(showTutorial){
     drawText(150, 200,
         (char*)"Press SPACE to jump",
         255, 255, 255, 255);
     }
+    // render the score and lives
     drawText(20, 20, (char*)("Score: " + to_string(score)).c_str(), 255,255,255,255);
     drawText(20, 60, (char*)("Lives: " + to_string(lives)).c_str(), 255,255,255,255);
 
